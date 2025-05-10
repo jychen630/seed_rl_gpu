@@ -5,7 +5,7 @@ Created on Thu Apr 19 15:34:50 2018
 @author: Maria Dimakopoulou
 """
 
-from environments import CartPole
+from environments_headless import CartPole
 from agents import ConstantAgent, RandomAgent, EpisodicQLearning, SARSA
 from agents import TabularFeatures
 
@@ -93,4 +93,4 @@ plt.xlabel("Episode")
 plt.ylabel("Reward")
 plt.ylim([0, None])
 plt.legend(handles=handles, loc="center", bbox_to_anchor=(0.5, -0.25))
-plt.show()
+plt.savefig("reward_plot_example.png")
