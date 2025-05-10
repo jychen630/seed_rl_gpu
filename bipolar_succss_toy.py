@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from util.logger import setup_logging
 import logging
-setup_logging()
+# setup_logging()
 
 class BipolarChainEnv:
     def __init__(self, N, theta):
@@ -44,7 +44,8 @@ class Agent:
 
         if algorithm == 'SeedSampling':
             z_k = np.random.rand()
-            theta_L_hat = N * np.sign(z_k - 0.5)
+            direction = 'L' if z_k < 0.5 else 'R'
+            theta_L_hat = N if direction == 'L' else -N
             theta_R_hat = -theta_L_hat
             self.sampled_theta = {'L': theta_L_hat, 'R': theta_R_hat}
             self.fixed_direction = 'L' if self.sampled_theta['L'] > self.sampled_theta['R'] else 'R'
@@ -60,14 +61,21 @@ class Agent:
     def act(self, H):
         pos = self.env.start
         total_reward = 0
-        direction = self.choose_direction()
-
         for step in range(H):
-            # If someone else revealed the true direction, switch
-            if self.env.revealed and direction != self.env.revealed_optimal_direction:
+            # Re-sample direction each step if using Thompson
+            if self.algorithm == 'Thompson':
+                direction = 'L' if np.random.rand() < self.prior_p else 'R'
+            elif self.algorithm == 'SeedSampling':
+                direction = self.fixed_direction
+            elif self.algorithm == 'UCRL':
+                direction = 'R'
+
+            # If truth is revealed, override
+            if self.env.revealed:
                 direction = self.env.revealed_optimal_direction
 
             next_pos = pos - 1 if direction == 'L' else pos + 1
+        
             next_pos = max(0, min(self.env.N - 1, next_pos))
             r, terminal = self.env.get_reward(next_pos)
             total_reward += r
@@ -102,26 +110,27 @@ def simulate_bipolar_chain_for_K_agents(K, N, H, algorithm, n_episodes=50):
         rewards = [0] * K
         terminated = [False] * K
 
-        for t in range(H):
-            for k in range(K):
-                if terminated[k]:
-                    continue
+        # for t in range(H):
+        #     for k in range(K):
+        #         if terminated[k]:
+        #             continue
 
-                # If the environment has been revealed, switch direction
-                if env.revealed:
-                    directions[k] = env.revealed_optimal_direction
+        #         # If the environment has been revealed, switch direction
+        #         if env.revealed:
+        #             directions[k] = env.revealed_optimal_direction
 
-                next_pos = positions[k] - 1 if directions[k] == 'L' else positions[k] + 1
-                next_pos_adj = max(0, min(N - 1, next_pos))
-                if next_pos_adj != next_pos:
-                    raise ValueError(f"algorithm={algorithm}, t={t}, k={k}, next_pos={next_pos}, next_pos_adj={next_pos_adj}")
-                    #next_pos = next_pos_adj
+        #         next_pos = positions[k] - 1 if directions[k] == 'L' else positions[k] + 1
+        #         next_pos_adj = max(0, min(N - 1, next_pos))
+        #         if next_pos_adj != next_pos:
+        #             raise ValueError(f"algorithm={algorithm}, t={t}, k={k}, next_pos={next_pos}, next_pos_adj={next_pos_adj}")
+        #             #next_pos = next_pos_adj
 
-                reward, terminal = env.get_reward(next_pos, k, t)
-                rewards[k] += reward
-                positions[k] = next_pos
-                terminated[k] = terminal
-
+        #         reward, terminal = env.get_reward(next_pos, k, t)
+        #         rewards[k] += reward
+        #         positions[k] = next_pos
+        #         terminated[k] = terminal
+        agents = [Agent(k, algorithm, env) for k in range(K)]
+        rewards = [agent.act(H) for agent in agents]
         total_rewards_all_agents = sum(rewards)
         mean_reward = total_rewards_all_agents / K
         mean_regret = r_star - mean_reward
@@ -134,8 +143,8 @@ def simulate_bipolar_chain_for_K_agents(K, N, H, algorithm, n_episodes=50):
     return bayes_regret
 
 # Parameters from the paper (Figure 3)
-N = 50
-H = 100
+N = 100
+H = 150
 # Wrong (fixed): common prior that should be with probability 0.5, theta_L = N and theta_R = -theta_L
 # TODO: if this probability sampled every agent or sampled once for all agent? i think it's the later
 # i.e, the agent share the same setting
@@ -160,6 +169,10 @@ plt.figure(figsize=(10, 6))
 for algo in algorithms:
     plt.plot(K_values, results[algo], marker='o', label=algo)
 logging.info(results)
+plt.axhline(y=25, color='r', linestyle='--', alpha=0.5, label='Reference (y=25)')
+plt.axhline(y=125, color='r', linestyle='--', alpha=0.5, label='Reference (y=125)')
+plt.axhline(y=200, color='r', linestyle='--', alpha=0.5, label='Reference (y=200)')
+
 plt.xscale('log')
 plt.xticks(K_values, labels=[f"$10^{{{i}}}$" for i in range(len(K_values))])
 plt.xlabel("Number of Concurrent Agents (K)")
