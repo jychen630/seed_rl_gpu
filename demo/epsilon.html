@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<body>
+<p><font size="24">DQN &epsilon;-greedy</p>
+<table>
+<tr>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_0.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_1.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_75.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_50.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_4.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_5.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_6.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_7.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_8.mp4" type="video/mp4">
+</video>
+</td>
+</tr>
+
+<tr>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_9.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_10.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_11.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_12.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_13.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_14.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_15.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_16.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_17.mp4" type="video/mp4">
+</video>
+</td>
+</tr>
+
+<tr>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_18.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_19.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_20.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_21.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_22.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_23.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_24.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_25.mp4" type="video/mp4">
+</video>
+</td>
+<td>
+<video width="200" height="200" autoplay>
+  <source src="epsilon_26.mp4" type="video/mp4">
+</video>
+</td>
+</tr>
+
+</table>
+<p id="demo" align="center"></p>
+<script>
+var myVar = setInterval(myTimer, 1000);
+
+var my_cntr = 0;
+function myTimer() {
+    if (my_cntr < 10) {
+       document.getElementById("demo").innerHTML = "00:0"+my_cntr.toString();
+       my_cntr += 1;
+
+   } else if (my_cntr < 30) {
+       document.getElementById("demo").innerHTML = "00:"+my_cntr.toString();
+       my_cntr += 1;
+
+   } else {
+      document.getElementById("demo").innerHTML = "00:"+my_cntr.toString();
+   }
+}
+</script>
+</body>
+</html>
