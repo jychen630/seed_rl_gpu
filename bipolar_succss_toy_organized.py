@@ -61,31 +61,33 @@ class Agent:
     def act(self, H):
         pos = self.env.start
         total_reward = 0
+
+        # FIXED direction for SeedSampling and UCRL
+        if self.algorithm == 'SeedSampling':
+            direction = self.fixed_direction
+        elif self.algorithm == 'UCRL':
+            direction = 'R'
+
         for step in range(H):
-            # Re-sample direction each step if using Thompson
+            # RESAMPLE each step for Thompson Resampling
             if self.algorithm == 'Thompson':
                 direction = 'L' if np.random.rand() < self.prior_p else 'R'
-            elif self.algorithm == 'SeedSampling':
-                direction = self.fixed_direction
-            elif self.algorithm == 'UCRL':
-                direction = 'R'
 
-            # If truth is revealed, override
+            # OVERRIDE if truth is revealed
             if self.env.revealed:
                 direction = self.env.revealed_optimal_direction
 
             next_pos = pos - 1 if direction == 'L' else pos + 1
-        
             next_pos = max(0, min(self.env.N - 1, next_pos))
-            r, terminal = self.env.get_reward(next_pos)
-            total_reward += r
+            reward, terminal = self.env.get_reward(next_pos)
+            total_reward += reward
             pos = next_pos
 
             if terminal:
-                # Agent terminates after reaching either endpoint
                 break
 
         return total_reward
+
 
 def simulate_bipolar_chain_for_K_agents(K, N, H, algorithm, n_episodes=50):
 
