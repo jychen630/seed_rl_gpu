@@ -102,35 +102,38 @@ def simulate_bipolar_chain_for_K_agents(K, N, H, algorithm, n_episodes=50):
         #logging.info("*" * 20 + f" episode {episode} " + "*" * 20)
         theta = {'L': theta_L, 'R': theta_R}
         env = BipolarChainEnv(N, theta)
+        if algorithm == 'UCRL' or algorithm == 'SeedSampling':
+            # Initialize agents, states, and logs
+            agents = [Agent(k, algorithm, env) for k in range(K)]
+            positions = [env.start] * K
+            directions = [agent.choose_direction() for agent in agents]
+            rewards = [0] * K
+            terminated = [False] * K
 
-        # Initialize agents, states, and logs
-        agents = [Agent(k, algorithm, env) for k in range(K)]
-        positions = [env.start] * K
-        directions = [agent.choose_direction() for agent in agents]
-        rewards = [0] * K
-        terminated = [False] * K
+            for t in range(H):
+                for k in range(K):
+                    if terminated[k]:
+                        continue
 
-        # for t in range(H):
-        #     for k in range(K):
-        #         if terminated[k]:
-        #             continue
+                    # If the environment has been revealed, switch direction
+                    if env.revealed:
+                        directions[k] = env.revealed_optimal_direction
 
-        #         # If the environment has been revealed, switch direction
-        #         if env.revealed:
-        #             directions[k] = env.revealed_optimal_direction
+                    next_pos = positions[k] - 1 if directions[k] == 'L' else positions[k] + 1
+                    next_pos_adj = max(0, min(N - 1, next_pos))
+                    if next_pos_adj != next_pos:
+                        raise ValueError(f"algorithm={algorithm}, t={t}, k={k}, next_pos={next_pos}, next_pos_adj={next_pos_adj}")
+                        #next_pos = next_pos_adj
 
-        #         next_pos = positions[k] - 1 if directions[k] == 'L' else positions[k] + 1
-        #         next_pos_adj = max(0, min(N - 1, next_pos))
-        #         if next_pos_adj != next_pos:
-        #             raise ValueError(f"algorithm={algorithm}, t={t}, k={k}, next_pos={next_pos}, next_pos_adj={next_pos_adj}")
-        #             #next_pos = next_pos_adj
+                    reward, terminal = env.get_reward(next_pos, k, t)
+                    rewards[k] += reward
+                    positions[k] = next_pos
+                    terminated[k] = terminal
+        elif algorithm == 'Thompson':
+            agents = [Agent(k, algorithm, env) for k in range(K)]
+            rewards = [agent.act(H) for agent in agents]
 
-        #         reward, terminal = env.get_reward(next_pos, k, t)
-        #         rewards[k] += reward
-        #         positions[k] = next_pos
-        #         terminated[k] = terminal
-        agents = [Agent(k, algorithm, env) for k in range(K)]
-        rewards = [agent.act(H) for agent in agents]
+        
         total_rewards_all_agents = sum(rewards)
         mean_reward = total_rewards_all_agents / K
         mean_regret = r_star - mean_reward
@@ -151,8 +154,8 @@ H = 150
 # When any of the K agents traverses e_L, or e_R for the first time, all K agents learn the true values of theta_L, theta_r
 
 
-K_values = [1, 10, 100, 1000, 10000] #list(range(1,101, 10))#
-algorithms = [ 'Thompson', 'SeedSampling', "UCRL"] #['SeedSampling'] #
+K_values = [1, 10, 100, 1000, 10000] 
+algorithms = [ 'Thompson', 'SeedSampling', "UCRL"]
 
 # Run simulation
 results = {}
