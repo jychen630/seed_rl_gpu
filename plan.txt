@@ -1,0 +1,26 @@
+todo
+
+1. all settings (bipolar, parallel chains, cartpole)
+2. measurement: execution time per agent, throughput (agent/sec), memory usage, gpu usage (for jax and pytorch)
+3. execution time per agent is a function of K for each setting 
+4. accelerator: pure numpy, jax, pytorch, 
+5. fix: how many agent? 1, 10, 100, 1000, 10000
+
+step 1: execution time per agent is a function of K (i.e \#of agent)
+step 1: automatically get 2 measurements. (save structured data)
+step 2: accelerator: jax (achieve same result)
+step 3: accelerator: pytorch (achieve same result)
+
+
+
+parallel chain, seed, 10000: 40min
+
+
+bipolar_seed_sampling_numpy_time_per_agent.png
+[env]_[algo]_[accelerator]_[metric].[suffix]
+env = {bipolar, parallel}
+algo = {seed_sampling, ucrl, thompson, seed_td, seed_lsvi}
+accelerator = {numpy, jax, pytorch}
+metric = {time_per_agent, throughput, memory_usage, gpu_usage}
+suffix = {png, csv}
+number_of_agents = {1, 10, 20,30, 40, 50, 60, 70, 80, 90, 100, 1000, //10000}

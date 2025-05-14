@@ -4,6 +4,10 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import psutil
+import GPUtil
+import time
+from collections import defaultdict
 
 class BipolarChainEnv:
     def __init__(self, N, theta):
@@ -172,17 +176,81 @@ def simulate(K, N, H, AgentClass, episodes=30):
 def run_experiments():
     N = 50
     H = 100
-    Ks = [1, 10, 20,30]#, 1000]
+    Ks = [1, 10, 50, 100]
     results = {}
+    
+    # Add dictionaries for tracking metrics
+    times = defaultdict(dict)
+    memory_usage = defaultdict(dict)
+    gpu_utilization = defaultdict(dict)
 
-    for AgentClass, name in [(SeedAgentTD, 'Seed TD'), (SeedAgentLSVI, 'Seed LSVI'), (ThompsonAgent, 'Thompson')]:
+    for AgentClass, name in [(SeedAgentTD, 'Seed TD'), (SeedAgentLSVI, 'Seed LSVI')]:
         regrets = []
         for K in Ks:
             print(f"Running {name} with K={K}")
+            
+            # Get initial memory and GPU usage
+            process = psutil.Process()
+            initial_memory = process.memory_info().rss / 1024 / 1024  # Convert to MB
+            initial_gpu = GPUtil.getGPUs()[0].memoryUsed if GPUtil.getGPUs() else 0
+            
+            start_time = time.time()
             regret = simulate(K, N, H, AgentClass)
+            end_time = time.time()
+            
+            # Calculate final memory and GPU usage
+            final_memory = process.memory_info().rss / 1024 / 1024  # Convert to MB
+            final_gpu = GPUtil.getGPUs()[0].memoryUsed if GPUtil.getGPUs() else 0
+            
+            # Store metrics
+            times[name][K] = (end_time - start_time)/K * 1000  # ms per agent
+            memory_usage[name][K] = (final_memory - initial_memory)/K  # MB per agent
+            gpu_utilization[name][K] = (final_gpu - initial_gpu)/K if GPUtil.getGPUs() else 0  # MB per agent
+            
             regrets.append(regret)
         results[name] = regrets
 
+    # Save time metrics
+    with open("bipolar_scale/bipolar_scale_times.csv", "w") as f:
+        f.write("Algorithm,")
+        for K in Ks:
+            f.write(f"K={K},")
+        f.write("\n")
+        
+        for algo, items in times.items():
+            f.write(f"{algo},")
+            for K in Ks:
+                f.write(f"{items[K]},")
+            f.write("\n")
+
+    # Save memory metrics
+    with open("bipolar_scale/bipolar_scale_memory.csv", "w") as f:
+        f.write("Algorithm,")
+        for K in Ks:
+            f.write(f"K={K},")
+        f.write("\n")
+        
+        for algo, items in memory_usage.items():
+            f.write(f"{algo},")
+            for K in Ks:
+                f.write(f"{items[K]},")
+            f.write("\n")
+
+    # Save GPU metrics if available
+    if GPUtil.getGPUs():
+        with open("bipolar_scale/bipolar_scale_gpu.csv", "w") as f:
+            f.write("Algorithm,")
+            for K in Ks:
+                f.write(f"K={K},")
+            f.write("\n")
+            
+            for algo, items in gpu_utilization.items():
+                f.write(f"{algo},")
+                for K in Ks:
+                    f.write(f"{items[K]},")
+                f.write("\n")
+
+    # Original regret plot
     plt.figure(figsize=(8, 5))
     plt.axhline(y=10, color='r', linestyle='--', alpha=0.5, label='Reference (y=25)')
     plt.axhline(y=55, color='r', linestyle='--', alpha=0.5, label='Reference (y=125)')
@@ -198,7 +266,53 @@ def run_experiments():
     plt.grid(True, which="both", linestyle="--")
     plt.legend()
     plt.tight_layout()
-    plt.savefig("bipolar_chain_seed_methods_numpy.png")
+    plt.savefig("bipolar_scale/bipolar_chain_seed_methods_numpy.png")
+
+    # Time per agent plot
+    plt.clf()
+    for algo, items in times.items():
+        plt.plot(items.keys(), items.values(), marker='o', label=algo)
+    plt.xticks(Ks, labels=[f"{i}" for i in Ks])
+    plt.xlabel("Number of Concurrent Agents (K)")
+    plt.ylabel("Time per Agent (ms)")
+    plt.title("Bipolar Chain: Time per Agent")
+    plt.legend()
+    plt.savefig("bipolar_scale/bipolar_scale_time_per_agent.png")
+
+    # Throughput plot
+    plt.clf()
+    for algo, items in times.items():
+        values = np.array(list(items.values()))
+        plt.plot(items.keys(), 1/values, marker='o', label=algo)
+    plt.xticks(Ks, labels=[f"{i}" for i in Ks])
+    plt.xlabel("Number of Concurrent Agents (K)")
+    plt.ylabel("Agent per millisecond")
+    plt.title("Bipolar Chain: Throughput (agent/ms)")
+    plt.legend()
+    plt.savefig("bipolar_scale/bipolar_scale_throughput.png")
+
+    # Memory usage plot
+    plt.clf()
+    for algo, items in memory_usage.items():
+        plt.plot(items.keys(), items.values(), marker='o', label=algo)
+    plt.xticks(Ks, labels=[f"{i}" for i in Ks])
+    plt.xlabel("Number of Concurrent Agents (K)")
+    plt.ylabel("Memory Usage per Agent (MB)")
+    plt.title("Bipolar Chain: Memory Usage per Agent")
+    plt.legend()
+    plt.savefig("bipolar_scale/bipolar_scale_memory_per_agent.png")
+
+    # GPU utilization plot if available
+    if GPUtil.getGPUs():
+        plt.clf()
+        for algo, items in gpu_utilization.items():
+            plt.plot(items.keys(), items.values(), marker='o', label=algo)
+        plt.xticks(Ks, labels=[f"{i}" for i in Ks])
+        plt.xlabel("Number of Concurrent Agents (K)")
+        plt.ylabel("GPU Memory Usage per Agent (MB)")
+        plt.title("Bipolar Chain: GPU Memory Usage per Agent")
+        plt.legend()
+        plt.savefig("bipolar_scale/bipolar_scale_gpu_per_agent.png")
 
 
 if __name__ == '__main__':

@@ -38,7 +38,7 @@ class Agent:
         if algorithm == "SeedSampling":
             self.seed_theta0 = np.random.normal(0, np.sqrt(2 * env.prior_vars))
             # Pre-sample noise for perturbations up to current observations
-            self.seed_w = np.random.normal(0, 1, size=self.env.total_observations + 1000)
+            self.seed_w = np.random.normal(0, 80, size=self.env.total_observations + 1000)
         
     def choose_chain(self):
         if self.algorithm == "SeedSampling":
@@ -73,12 +73,12 @@ class Agent:
 
 def simulate_parallel_chains(K, C, H, prior_vars, algorithm, n_sims=50):
     all_regrets = []
-    for _ in tqdm(range(n_sims)):
+    for _ in range(n_sims):
         env = ParallelChainsEnv(C, H, prior_vars)
         cumulative_regret = []
         total_reward = 0
         
-        for k in tqdm(range(K)):
+        for k in range(K):
             agent = Agent(k, algorithm, env)
             c = agent.choose_chain()
             
@@ -105,39 +105,39 @@ prior_vars = np.array([100 + c for c in range(1, C + 1)])  # σ_c² = 100 + c (c
 
 # Simulate Figure 4(a)
 K_values = [1, 10, 100, 1000] #,10000]  # 10^0 to 10^4
-alg_regrets = {"SeedSampling": [], "Thompson": [], "UCRL": []}
+alg_regrets = {"SeedSampling": []}#, "Thompson": [], "UCRL": []}
 
-# for alg in alg_regrets.keys():
-#     print(f"Simulating {alg}...")
-#     for K in tqdm(K_values):
-#         avg_regret, _ = simulate_parallel_chains(K, C, H, prior_vars, alg, n_sims=100)
-#         alg_regrets[alg].append(avg_regret)
+for alg in alg_regrets.keys():
+    print(f"Simulating {alg}...")
+    for K in tqdm(K_values):
+        avg_regret, _ = simulate_parallel_chains(K, C, H, prior_vars, alg, n_sims=100)
+        alg_regrets[alg].append(avg_regret)
 
-# # Plot Figure 4(a)
-# plt.figure(figsize=(10, 6))
-# for alg, reg in alg_regrets.items():
-#     plt.plot(K_values, reg, marker='o', label=alg)
-# plt.xscale('log')
-# plt.xticks(K_values, labels=[f"$10^{i}$" for i in range(len(K_values))])
-# plt.xlabel("Number of Agents (K)")
-# plt.ylabel("Mean Regret per Agent")
-# plt.legend()
-# plt.title("Parallel Chains: Mean Regret vs. Number of Agents (Figure 4a)")
-# plt.grid()
-# plt.savefig("parallela.png")
-
-# Simulate Figure 4(b) (100,000 agents)
-K_large = 100000
-_, cumulative_regret_seed = simulate_parallel_chains(K_large, C, H, prior_vars, "SeedSampling", n_sims=100)
-_, cumulative_regret_ucrl = simulate_parallel_chains(K_large, C, H, prior_vars, "UCRL", n_sims=100)
-
-# Plot Figure 4(b)
+# Plot Figure 4(a)
 plt.figure(figsize=(10, 6))
-plt.plot(np.arange(K_large), cumulative_regret_seed, label="Seed Sampling", alpha=0.7)
-plt.plot(np.arange(K_large), cumulative_regret_ucrl, label="Concurrent UCRL", alpha=0.7)
-plt.xlabel("Agent Activation Order (Ascending $t_{k,0}$)")
-plt.ylabel("Cumulative Regret")
+for alg, reg in alg_regrets.items():
+    plt.plot(K_values, reg, marker='o', label=alg)
+plt.xscale('log')
+plt.xticks(K_values, labels=[f"$10^{i}$" for i in range(len(K_values))])
+plt.xlabel("Number of Agents (K)")
+plt.ylabel("Mean Regret per Agent")
 plt.legend()
-plt.title("Parallel Chains: Cumulative Regret for 100,000 Agents (Figure 4b)")
+plt.title("Parallel Chains: Mean Regret vs. Number of Agents (Figure 4a)")
 plt.grid()
-plt.savefig("parallelb.png")
+plt.savefig("parallela.png")
+
+# # Simulate Figure 4(b) (100,000 agents)
+# K_large = 100000
+# _, cumulative_regret_seed = simulate_parallel_chains(K_large, C, H, prior_vars, "SeedSampling", n_sims=100)
+# _, cumulative_regret_ucrl = simulate_parallel_chains(K_large, C, H, prior_vars, "UCRL", n_sims=100)
+
+# # Plot Figure 4(b)
+# plt.figure(figsize=(10, 6))
+# plt.plot(np.arange(K_large), cumulative_regret_seed, label="Seed Sampling", alpha=0.7)
+# plt.plot(np.arange(K_large), cumulative_regret_ucrl, label="Concurrent UCRL", alpha=0.7)
+# plt.xlabel("Agent Activation Order (Ascending $t_{k,0}$)")
+# plt.ylabel("Cumulative Regret")
+# plt.legend()
+# plt.title("Parallel Chains: Cumulative Regret for 100,000 Agents (Figure 4b)")
+# plt.grid()
+# plt.savefig("parallelb.png")
