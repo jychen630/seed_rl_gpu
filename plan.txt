@@ -24,3 +24,39 @@ accelerator = {numpy, jax, pytorch}
 metric = {time_per_agent, throughput, memory_usage, gpu_usage}
 suffix = {png, csv}
 number_of_agents = {1, 10, 20,30, 40, 50, 60, 70, 80, 90, 100, 1000, //10000}
+
+
+export JAX_PLATFORM_NAME=cpu
+
+
+wait, how should we include K???
+
+for time_per_agent, I need a group of subplot 1 * 5
+    for env in {bipolar env} :
+        for algo in {ucrl, thompson sampling, seed sampling, seed td, seed_lsvi}
+            line plots {three lines: numpy, jax, torch} ** {x-axis: all Ks they are run against}
+            note that not all algo and framework are run against the same Ks set. make a union of such Ks and left it blank for those that dont have a result
+
+
+for {cartpole env}:
+    a group of bars: {numpy, jax, torch} ** {seed td}
+    so total 3 bars only!
+
+
+    
+            we wish to sharply compare numpy + jax + torch tightly in a narrow view
+            like: plot{ groupbar{numpy_k_10, jax_k_10, torch_k_10}, groupbar{numpy_k_10, jax_k_10, torch_k_10}, groupbar{numpy_k_100, jax_k_100, torch_k_100}, ... }
+
+
+
+
+
+
+
+paper section
+
+- problem formulation
+
+- Results
+- Analysis (main take away bullets)
+- Conclusion
